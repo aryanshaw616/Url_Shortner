@@ -70,12 +70,12 @@
 
 <body>
 <nav class="navbar navbar-dark">
-	<a class="navbar-brand" th:href="'http://localhost:' + ${serverPort}">Ak - UrlGenerator</a>
+	<a class="navbar-brand" th:href="@{/}">Ak - UrlGenerator</a>
 </nav>
 
 <div class="container mt-5 text-center" th:if="${session.error}">
 	<p class="error-text" th:text="${session.error}"></p>
-	<a class="btn btn-home mt-3" th:href="'http://localhost:' + ${serverPort}">Go Back Home</a>
+	<a class="btn btn-home mt-3" th:href="@{/}">Go Back Home</a>
 </div>
 </body>
 
