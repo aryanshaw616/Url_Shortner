@@ -2,7 +2,6 @@ package com.aryan.service;
 
 import com.aryan.entity.UrlData;
 import com.aryan.repo.UrlDataRepo;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +11,14 @@ import java.util.Random;
 @Service
 public class AppServiceImpl implements AppService {
 
-	@Autowired
-	private UrlDataRepo urlDataRepo;
+	private final UrlDataRepo urlDataRepo;
 
 	@Value("${app.base-url}")
 	private String baseUrl;
+
+	public AppServiceImpl(UrlDataRepo urlDataRepo) {
+		this.urlDataRepo = urlDataRepo;
+	}
 
 	@Override
 	public String saveUrl(String url) throws Exception {
@@ -26,10 +28,10 @@ public class AppServiceImpl implements AppService {
 			url = "https://" + url;
 		}
 
-		String unique = unique();
-		while (urlDataRepo.existsById(unique)) {
+		String unique;
+		do {
 			unique = unique();
-		}
+		} while (urlDataRepo.existsById(unique));
 
 		UrlData data = new UrlData();
 		data.setShortUrl(unique);
@@ -41,13 +43,8 @@ public class AppServiceImpl implements AppService {
 
 	@Override
 	public UrlData getOriginalUrl(String shortUrl) throws Exception {
-		Optional<UrlData> optUrlData = urlDataRepo.findById(shortUrl);
-
-		if (optUrlData.isPresent()) {
-			return optUrlData.get();
-		} else {
-			throw new Exception("Enter a valid url!");
-		}
+		return urlDataRepo.findById(shortUrl)
+				.orElseThrow(() -> new Exception("Enter a valid url!"));
 	}
 
 	// Method to generate unique string
@@ -56,18 +53,10 @@ public class AppServiceImpl implements AppService {
 		StringBuilder sb = new StringBuilder();
 
 		for (int i = 0; i < 6; ++i) {
-			int choice = r.nextInt(2);
-			if (choice == 0) {
-				choice = r.nextInt(2);
-				int index = r.nextInt(26);
-				if (choice == 0) {
-					sb.append((char) ('a' + index));
-				} else {
-					sb.append((char) ('A' + index));
-				}
+			if (r.nextBoolean()) {
+				sb.append((char) ('A' + r.nextInt(26)));
 			} else {
-				int num = r.nextInt(10);
-				sb.append(num);
+				sb.append(r.nextInt(10));
 			}
 		}
 		return sb.toString();
