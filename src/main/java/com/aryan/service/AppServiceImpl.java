@@ -49,7 +49,8 @@ public class AppServiceImpl implements AppService {
 		urlDataRepo.save(data);
 
 
-		return "https://urlshortner-production-07b3.up.railway.app/tiny/" + unique;
+		return "https://UrLShortner.up.railway.app/tiny/" + unique;
+
 
 
 
