@@ -1,7 +1,9 @@
 package com.aryan.service;
 
+
 import com.aryan.entity.UrlData;
 import com.aryan.repo.UrlDataRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -11,54 +13,95 @@ import java.util.Random;
 @Service
 public class AppServiceImpl implements AppService {
 
-	private final UrlDataRepo urlDataRepo;
+	@Autowired
+	private UrlDataRepo urlDataRepo;
 
-	@Value("${app.base-url}")
-	private String baseUrl;
 
-	public AppServiceImpl(UrlDataRepo urlDataRepo) {
-		this.urlDataRepo = urlDataRepo;
-	}
+	 @Value("${server.port}")
+	 private String port;
 
 	@Override
-	public String saveUrl(String url) throws Exception {
-		if (url.isEmpty()) throw new Exception("Empty link! Please enter a link");
+	public String saveUrl(String url)throws Exception {
 
+		if(url.equals("")) throw new Exception("Empty link ! please enter any link");
+
+		// add prefix https if it is not there in url
 		if (!url.startsWith("https://")) {
+
 			url = "https://" + url;
+        }
+
+
+
+		String unique = unique();
+
+		Optional<UrlData> optUrlData = urlDataRepo.findById(unique);
+
+		while(optUrlData.isPresent()) {
+			unique = unique();
 		}
 
-		String unique;
-		do {
-			unique = unique();
-		} while (urlDataRepo.existsById(unique));
 
 		UrlData data = new UrlData();
 		data.setShortUrl(unique);
 		data.setOriginalUrl(url);
+
 		urlDataRepo.save(data);
 
-		return "https://urlshortner-production-07b3.up.railway.app/tiny/" + unique;
+
+		return "localhost:"+ port+"/tiny/"+unique;
+
+
+
 	}
 
 	@Override
 	public UrlData getOriginalUrl(String shortUrl) throws Exception {
-		return urlDataRepo.findById(shortUrl)
-				.orElseThrow(() -> new Exception("Enter a valid url!"));
-	}
 
-	// Method to generate unique string
-	private String unique() {
-		Random r = new Random();
-		StringBuilder sb = new StringBuilder();
+		Optional<UrlData> optUrlData = urlDataRepo.findById(shortUrl);
 
-		for (int i = 0; i < 6; ++i) {
-			if (r.nextBoolean()) {
-				sb.append((char) ('A' + r.nextInt(26)));
-			} else {
-				sb.append(r.nextInt(10));
-			}
+
+		UrlData data = null;
+		if(optUrlData.isPresent()) {
+			data = optUrlData.get();
+		}else {
+			throw new Exception("Enter a valid url !");
 		}
-		return sb.toString();
+
+
+
+		return data;
+
+
 	}
+
+	// method to generate unique string
+	private String unique(){
+
+        Random r = new Random();
+        StringBuilder sb = new StringBuilder();
+
+        for(int i=0; i<6; ++i){
+
+            int choice = r.nextInt(2);
+            if(choice == 0){
+               choice = r.nextInt(2);
+               int index = r.nextInt(26);
+               if(choice == 0){
+                   sb.append((char) ('a'+index));
+               }else{
+                  sb.append((char) ('A'+index));
+               }
+            }else{
+                int num = r.nextInt(10);
+                sb.append(num+"");
+            }
+        }
+
+        return sb.toString();
+    }
+
+
+
+
 }
